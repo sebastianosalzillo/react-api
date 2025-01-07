@@ -1,161 +1,153 @@
-import { useState } from "react";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import { useState, useEffect } from "react";
+import "bootstrap/dist/css/bootstrap.min.css";
 import axios from "axios";
 
 function App() {
   const [articles, setArticles] = useState([]);
   const [formData, setFormData] = useState({
-    title: "",
-    image: "",
-    content: "",
-    category: "",
-    isPublished: false,
+    titolo: "",
+    immagine: "",
+    contenuto: "",
+    tags: [],
   });
 
+  const API_URL = "http://localhost:3000/posts";
+
+  // Fetch iniziale degli articoli
+  useEffect(() => {
+    axios
+      .get(API_URL)
+      .then((response) => {
+        console.log("Dati ricevuti:", response.data);
+        setArticles(response.data.posts || []);  // Evita undefined
+      })
+      .catch((error) => {
+        console.error("Errore durante il fetch:", error);
+      });
+  }, []);
+
+  // Gestione input del form
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: value,
     });
   };
 
+  const handleTagsChange = (e) => {
+    setFormData({
+      ...formData,
+      tags: e.target.value.split(","),
+    });
+  };
+
+  // Aggiunta di un nuovo articolo
   const handleAddArticle = (event) => {
     event.preventDefault();
 
     const newArticle = {
-      id: Date.now(),
       ...formData,
     };
 
-    setArticles([...articles, newArticle]);
-    setFormData({
-      title: "",
-      image: "",
-      content: "",
-      category: "",
-      isPublished: false,
-    });
+    axios
+      .post(API_URL, newArticle)
+      .then((response) => {
+        console.log("Articolo aggiunto:", response.data);
+        setArticles(response.data.posts || []);  // Aggiorna lista articoli
+        setFormData({
+          titolo: "",
+          immagine: "",
+          contenuto: "",
+          tags: [],
+        });
+      })
+      .catch((error) => {
+        console.error("Errore durante l'aggiunta:", error);
+      });
   };
 
+  // Rimozione di un articolo
   const removeArticle = (id) => {
-    const updatedArticles = articles.filter((article) => article.id !== id);
-    setArticles(updatedArticles);
+    axios
+      .delete(`${API_URL}/${id}`)
+      .then((response) => {
+        setArticles(response.data.posts || []);  // Aggiorna lista articoli
+      })
+      .catch((error) => {
+        console.error("Errore durante la rimozione:", error);
+      });
   };
 
   return (
     <div className="container my-5">
       <h1 className="text-center mb-4">Gestione Articoli del Blog</h1>
+      
+      {/* Form per aggiungere nuovi articoli */}
       <form onSubmit={handleAddArticle} className="mb-4">
         <div className="mb-3">
-          <label htmlFor="title" className="form-label">
+          <label htmlFor="titolo" className="form-label">
             Titolo dell'articolo
           </label>
           <input
             type="text"
-            id="title"
-            name="title"
+            id="titolo"
+            name="titolo"
             className="form-control"
-            placeholder="Inserisci il titolo dell'articolo"
-            value={formData.title}
+            value={formData.titolo}
             onChange={handleInputChange}
           />
         </div>
 
         <div className="mb-3">
-          <label htmlFor="image" className="form-label">
+          <label htmlFor="immagine" className="form-label">
             URL Immagine
           </label>
           <input
             type="text"
-            id="image"
-            name="image"
+            id="immagine"
+            name="immagine"
             className="form-control"
-            placeholder="Inserisci l'URL dell'immagine"
-            value={formData.image}
+            value={formData.immagine}
             onChange={handleInputChange}
           />
         </div>
 
         <div className="mb-3">
-          <label htmlFor="content" className="form-label">
+          <label htmlFor="contenuto" className="form-label">
             Contenuto
           </label>
           <textarea
-            id="content"
-            name="content"
+            id="contenuto"
+            name="contenuto"
             className="form-control"
-            placeholder="Scrivi il contenuto dell'articolo"
-            value={formData.content}
-            onChange={handleInputChange}
-          ></textarea>
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor="category" className="form-label">
-            Categoria
-          </label>
-          <select
-            id="category"
-            name="category"
-            className="form-select"
-            value={formData.category}
-            onChange={handleInputChange}
-          >
-            <option value="">Seleziona una categoria</option>
-            <option value="Tecnologia">Tecnologia</option>
-            <option value="Lifestyle">Lifestyle</option>
-            <option value="Viaggi">Viaggi</option>
-            <option value="Altro">Altro</option>
-          </select>
-        </div>
-
-        <div className="form-check mb-3">
-          <input
-            type="checkbox"
-            id="isPublished"
-            name="isPublished"
-            className="form-check-input"
-            checked={formData.isPublished}
+            value={formData.contenuto}
             onChange={handleInputChange}
           />
-          <label htmlFor="isPublished" className="form-check-label">
-            Pubblica l'articolo
-          </label>
         </div>
 
         <button type="submit" className="btn btn-primary">Aggiungi Articolo</button>
       </form>
 
-      <section>
-        <h2>Lista degli Articoli</h2>
+      {/* Lista articoli */}
+      <ul className="list-group">
         {articles.length > 0 ? (
-          <ul className="list-group">
-            {articles.map((article) => (
-              <li
-                key={article.id}
-                className="list-group-item d-flex justify-content-between align-items-start flex-column"
+          articles.map((article) => (
+            <li key={article.id} className="list-group-item">
+              <h5>{article.titolo}</h5>
+              <p>{article.contenuto}</p>
+              <button
+                onClick={() => removeArticle(article.id)}
+                className="btn btn-danger"
               >
-                <div>
-                  <h5>{article.title}</h5>
-                  {article.image && <img src={article.image} alt={article.title} className="img-fluid mb-2" style={{ maxWidth: "150px" }} />}
-                  <p>{article.content}</p>
-                  <p><strong>Categoria:</strong> {article.category}</p>
-                  <p><strong>Stato:</strong> {article.isPublished ? "Pubblicato" : "Bozza"}</p>
-                </div>
-                <button
-                  className="btn btn-danger btn-sm mt-2"
-                  onClick={() => removeArticle(article.id)}
-                >
-                  Rimuovi
-                </button>
-              </li>
-            ))}
-          </ul>
+                Rimuovi
+              </button>
+            </li>
+          ))
         ) : (
-          <p className="text-muted">Nessun articolo presente. Aggiungine uno!</p>
+          <p className="text-muted">Nessun articolo disponibile</p>
         )}
-      </section>
+      </ul>
     </div>
   );
 }
