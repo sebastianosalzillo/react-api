@@ -26,7 +26,6 @@ function App() {
       });
   }, []);
 
-  // Gestione input del form
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -42,7 +41,7 @@ function App() {
     });
   };
 
-  // Aggiunta di un nuovo articolo
+  
   const handleAddArticle = (event) => {
     event.preventDefault();
 
@@ -54,7 +53,7 @@ function App() {
       .post(API_URL, newArticle)
       .then((response) => {
         console.log("Articolo aggiunto:", response.data);
-        setArticles(response.data.posts || []);  // Aggiorna lista articoli
+        setArticles(response.data.posts || []);  
         setFormData({
           titolo: "",
           immagine: "",
@@ -67,12 +66,12 @@ function App() {
       });
   };
 
-  // Rimozione di un articolo
+  
   const removeArticle = (id) => {
     axios
       .delete(`${API_URL}/${id}`)
       .then((response) => {
-        setArticles(response.data.posts || []);  // Aggiorna lista articoli
+        setArticles(response.data.posts || []);  
       })
       .catch((error) => {
         console.error("Errore durante la rimozione:", error);
@@ -83,7 +82,7 @@ function App() {
     <div className="container my-5">
       <h1 className="text-center mb-4">Gestione Articoli del Blog</h1>
       
-      {/* Form per aggiungere nuovi articoli */}
+      
       <form onSubmit={handleAddArticle} className="mb-4">
         <div className="mb-3">
           <label htmlFor="titolo" className="form-label">
@@ -129,7 +128,6 @@ function App() {
         <button type="submit" className="btn btn-primary">Aggiungi Articolo</button>
       </form>
 
-      {/* Lista articoli */}
       <ul className="list-group">
         {articles.length > 0 ? (
           articles.map((article) => (
